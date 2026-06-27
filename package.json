@@ -10,7 +10,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@next/swc-win32-x64-msvc": "^14.2.33",
     "@radix-ui/react-slot": "^1.1.1",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.17.10",
