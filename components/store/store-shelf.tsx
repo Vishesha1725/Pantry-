@@ -1,9 +1,10 @@
 import type { GroceryItem, GrocerySectionKey } from "@/types";
+import { motion } from "framer-motion";
 import { ProductItem } from "./product-item";
 
 export function StoreShelf({ title, items, sectionKey, tone }: { title: string; items: GroceryItem[]; sectionKey: GrocerySectionKey; tone: string }) {
   return (
-    <div className="rounded-2xl border border-cocoa/15 bg-[#8b5f43] p-3 shadow-cozy">
+    <motion.div whileHover={{ y: -5 }} className="rounded-2xl border border-cocoa/15 bg-[#8b5f43] p-3 shadow-cozy">
       <div className={`mb-3 rounded-xl px-3 py-2 text-sm font-black text-cocoa ${tone}`}>{title}</div>
       <div className="rounded-xl bg-[#b98559] p-2">
         <div className="grid grid-cols-3 gap-2 border-b-4 border-[#7a4d33] pb-3">
@@ -14,6 +15,6 @@ export function StoreShelf({ title, items, sectionKey, tone }: { title: string; 
           {items.slice(6, 12).map((item) => <ProductItem key={`${title}-${item.name}`} item={item} sectionKey={sectionKey} />)}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

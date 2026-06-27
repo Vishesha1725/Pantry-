@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+
 export function CozyProgressBar({ value, label }: { value: number; label?: string }) {
   return (
     <div className="space-y-2">
@@ -6,7 +8,12 @@ export function CozyProgressBar({ value, label }: { value: number; label?: strin
         <span>{Math.round(value)}%</span>
       </div>
       <div className="h-3 overflow-hidden rounded-full bg-white/70 shadow-insetCozy">
-        <div className="h-full rounded-full bg-gradient-to-r from-sage via-honey to-coral" style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
+        <motion.div
+          className="h-full rounded-full bg-gradient-to-r from-sage via-honey to-coral"
+          initial={{ width: 0 }}
+          animate={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        />
       </div>
     </div>
   );

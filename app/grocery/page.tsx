@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { WandSparkles } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
+import { GroceryDragBoard } from "@/components/grocery/grocery-drag-board";
 import { GrocerySection } from "@/components/grocery/grocery-section";
 import { Nav } from "@/components/nav";
 import { CozyStoreScene } from "@/components/store/cozy-store-scene";
@@ -18,6 +19,15 @@ export default function GroceryPage() {
     + grocerySections.quarterlyBulk.length
     + grocerySections.checkPantry.length
     + grocerySections.optional.length;
+  const dragItems = [
+    ...grocerySections.todayFresh.map((item) => ({ ...item, sectionKey: "todayFresh" as const })),
+    ...Object.entries(grocerySections.sameDayByDate).flatMap(([date, items]) => items.map((item) => ({ ...item, sectionKey: `sameDayByDate:${date}` as const }))),
+    ...grocerySections.weeklyFresh.map((item) => ({ ...item, sectionKey: "weeklyFresh" as const })),
+    ...grocerySections.monthlyStaples.map((item) => ({ ...item, sectionKey: "monthlyStaples" as const })),
+    ...grocerySections.quarterlyBulk.map((item) => ({ ...item, sectionKey: "quarterlyBulk" as const })),
+    ...grocerySections.checkPantry.map((item) => ({ ...item, sectionKey: "checkPantry" as const })),
+    ...grocerySections.optional.map((item) => ({ ...item, sectionKey: "optional" as const }))
+  ];
 
   return (
     <>
@@ -38,6 +48,7 @@ export default function GroceryPage() {
         ) : (
           <>
             <CozyStoreScene sections={grocerySections} />
+            <div className="mt-6"><GroceryDragBoard items={dragItems} /></div>
             <div className="mt-6 grid gap-5 lg:grid-cols-2">
               <GrocerySection title="Today's Fresh Order" items={grocerySections.todayFresh} sectionKey="todayFresh" accent="bg-honey" />
               {Object.entries(grocerySections.sameDayByDate).map(([date, items]) => <GrocerySection key={date} title={`Same-Day Fresh: ${date}`} items={items} sectionKey={`sameDayByDate:${date}`} accent="bg-coral" />)}

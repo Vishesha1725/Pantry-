@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { CalendarPlus, Clock, Eye, Plus, X } from "lucide-react";
 import { FreshnessBadge } from "@/components/freshness-badge";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,8 @@ import type { Recipe } from "@/types";
 
 export function RecipeCard({ recipe, selected = false, onSelect, onAddToPlan }: { recipe: Recipe; selected?: boolean; onSelect?: () => void; onAddToPlan?: () => void }) {
   return (
-    <Card className={`group flex h-full flex-col overflow-hidden hover:-translate-y-1 hover:shadow-cozy ${selected ? "ring-2 ring-coral" : ""}`}>
+    <motion.div layout initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -6, scale: 1.01 }} whileTap={{ scale: 0.99 }} transition={{ duration: 0.24 }}>
+    <Card className={`group flex h-full flex-col overflow-hidden ${selected ? "ring-2 ring-coral" : ""}`}>
       <div className="h-2 bg-gradient-to-r from-sage via-honey to-coral" />
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
@@ -36,5 +38,6 @@ export function RecipeCard({ recipe, selected = false, onSelect, onAddToPlan }: 
         </div>
       </CardContent>
     </Card>
+    </motion.div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { Check, Clock, PackagePlus, RefreshCw, ShoppingCart, Trash2, X } from "lucide-react";
 import { FreshnessBadge } from "@/components/freshness-badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ export function GroceryItemCard({ item, sectionKey }: { item: GroceryItem; secti
   const { updateGroceryItem, deleteGroceryItem } = usePantryQuest();
   const updateStatus = (status: GroceryItem["status"], suggestedAction: string) => updateGroceryItem(sectionKey, item.name, { status, suggestedAction });
   return (
-    <div className={`rounded-2xl border bg-white/75 p-4 shadow-insetCozy ${item.status === "have" ? "opacity-60" : ""}`}>
+    <motion.div layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -3 }} className={`rounded-2xl border bg-white/75 p-4 shadow-insetCozy ${item.status === "have" ? "opacity-60" : ""}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <h4 className="font-black capitalize text-cocoa">{item.name}</h4>
@@ -26,7 +27,7 @@ export function GroceryItemCard({ item, sectionKey }: { item: GroceryItem; secti
         <Button size="sm" variant="outline" onClick={() => updateGroceryItem(sectionKey, item.name, { buyingMode: "same_day_fresh", status: "need", suggestedAction: "Order same-day before cooking" })}><Clock className="h-3.5 w-3.5" />Same-day</Button>
         <Button size="sm" variant="outline" onClick={() => updateStatus("stale", "Replace ingredient before cooking")}><RefreshCw className="h-3.5 w-3.5" />Replace</Button>
         <Button size="sm" variant="ghost" onClick={() => updateStatus("ignored", "Ignored for this grocery run")}><X className="h-3.5 w-3.5" />Ignore</Button>
-        <Button size="sm" onClick={() => updateStatus("need", "Need to order")}><ShoppingCart className="h-3.5 w-3.5" />Need</Button>
+        <Button size="sm" onClick={() => updateStatus("need", "Need to order")}><motion.span animate={item.status === "need" ? { y: [0, -5, 0] } : {}} transition={{ duration: 0.4 }}><ShoppingCart className="h-3.5 w-3.5" /></motion.span>Need</Button>
         <EditItemModal
           title={`Edit ${item.name}`}
           fields={["name", "quantity", "unit", "category"]}
@@ -40,6 +41,6 @@ export function GroceryItemCard({ item, sectionKey }: { item: GroceryItem; secti
         />
         <Button size="sm" variant="outline" onClick={() => deleteGroceryItem(sectionKey, item.name)}><Trash2 className="h-3.5 w-3.5" />Delete</Button>
       </div>
-    </div>
+    </motion.div>
   );
 }

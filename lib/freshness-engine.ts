@@ -38,6 +38,8 @@ export function isFreshEnough(item: PantryItem | undefined, ingredient: Ingredie
 export function decideBuyingMode(ingredient: Pick<Ingredient, "name" | "category" | "buyingMode">): BuyingMode {
   const name = ingredient.name.toLowerCase();
   if (["paneer", "coriander", "mint", "lettuce", "spinach", "methi", "sprouted moong"].some((term) => name.includes(term))) return "same_day_fresh";
+  if (name.includes("oat milk")) return "weekly_fresh";
+  if (name.includes("matcha")) return "one_time";
   if (["curd", "milk"].some((term) => name.includes(term))) return "daily_use";
   if (["fruit", "tomato", "onion", "cucumber", "lemon", "chilli", "ginger", "garlic", "bread", "wrap"].some((term) => name.includes(term))) return "weekly_fresh";
   if (["detergent", "garbage", "foil", "cleaning", "toiletries"].some((term) => name.includes(term))) return "quarterly_bulk";
