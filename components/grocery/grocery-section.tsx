@@ -1,7 +1,8 @@
-import type { GroceryItem } from "@/types";
+import type { GroceryItem, GrocerySectionKey } from "@/types";
+import { EmptyState } from "../empty-state";
 import { GroceryItemCard } from "./grocery-item-card";
 
-export function GrocerySection({ title, items, accent = "bg-sage" }: { title: string; items: GroceryItem[]; accent?: string }) {
+export function GrocerySection({ title, items, sectionKey, accent = "bg-sage" }: { title: string; items: GroceryItem[]; sectionKey: GrocerySectionKey; accent?: string }) {
   return (
     <section className="cozy-panel rounded-2xl p-5">
       <div className="mb-4 flex items-center gap-3">
@@ -10,7 +11,7 @@ export function GrocerySection({ title, items, accent = "bg-sage" }: { title: st
         <span className="ml-auto rounded-full bg-white/80 px-3 py-1 text-xs font-bold text-cocoa">{items.length}</span>
       </div>
       <div className="grid gap-3">
-        {items.length ? items.map((item) => <GroceryItemCard key={`${title}-${item.name}-${item.unit}`} item={item} />) : <p className="rounded-xl bg-white/60 p-4 text-sm text-muted-foreground">Nothing needed here right now.</p>}
+        {items.length ? items.map((item) => <GroceryItemCard key={`${title}-${item.name}-${item.unit}`} item={item} sectionKey={sectionKey} />) : <EmptyState title="All clear" description="Nothing needed here right now." className="p-4" />}
       </div>
     </section>
   );

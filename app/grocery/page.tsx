@@ -1,28 +1,55 @@
-import { ThreeDStore } from "@/components/3d";
+"use client";
+
+import Link from "next/link";
+import { WandSparkles } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { GrocerySection } from "@/components/grocery/grocery-section";
 import { Nav } from "@/components/nav";
-import { grocerySections } from "@/lib/demo-data";
+import { CozyStoreScene } from "@/components/store/cozy-store-scene";
+import { Button } from "@/components/ui/button";
+import { usePantryQuest } from "@/lib/app-state";
 
 export default function GroceryPage() {
+  const { grocerySections, weeklyPlan, generateGroceries, clearGroceryList } = usePantryQuest();
+  const total = grocerySections.todayFresh.length
+    + Object.values(grocerySections.sameDayByDate).flat().length
+    + grocerySections.weeklyFresh.length
+    + grocerySections.monthlyStaples.length
+    + grocerySections.quarterlyBulk.length
+    + grocerySections.checkPantry.length
+    + grocerySections.optional.length;
+
   return (
     <>
       <Nav />
       <main className="mx-auto max-w-7xl px-4 py-8">
-        <div className="mb-5 cozy-panel rounded-2xl p-5">
-          <h1 className="text-3xl font-black text-cocoa">Grocery Generator</h1>
-          <p className="mt-2 text-muted-foreground">Merged ingredients are compared with pantry stock, freshness, and cooking dates before they become an order list.</p>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 cozy-panel rounded-2xl p-5">
+          <div>
+            <h1 className="text-3xl font-black text-cocoa">Grocery Generator</h1>
+            <p className="mt-2 text-muted-foreground">Merged ingredients are compared with pantry stock, freshness, and cooking dates before they become an order list.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={generateGroceries} disabled={!weeklyPlan.length}><WandSparkles className="h-4 w-4" />Generate Grocery List</Button>
+            <Button variant="outline" onClick={clearGroceryList} disabled={!total}>Clear Grocery List</Button>
+          </div>
         </div>
-        <ThreeDStore sections={grocerySections} />
-        <div className="mt-6 grid gap-5 lg:grid-cols-2">
-          <GrocerySection title="Today’s Fresh Order" items={grocerySections.todayFresh} accent="bg-honey" />
-          {Object.entries(grocerySections.sameDayByDate).map(([date, items]) => <GrocerySection key={date} title={`Same-Day Fresh: ${date}`} items={items} accent="bg-coral" />)}
-          <GrocerySection title="Weekly Fresh Grocery" items={grocerySections.weeklyFresh} accent="bg-sage" />
-          <GrocerySection title="Monthly Staples" items={grocerySections.monthlyStaples} accent="bg-cocoa" />
-          <GrocerySection title="Quarterly Bulk" items={grocerySections.quarterlyBulk} accent="bg-lavender" />
-          <GrocerySection title="Check Pantry" items={grocerySections.checkPantry} accent="bg-honey" />
-          <GrocerySection title="Optional Items" items={grocerySections.optional} />
-          <GrocerySection title="Ignored Items" items={grocerySections.ignored} />
-        </div>
+        {!weeklyPlan.length && !total ? (
+          <EmptyState title="No grocery quest yet" description="Select recipes and create a weekly plan before generating groceries." action={<Button asChild><Link href="/recipes">Pick Weekly Recipes</Link></Button>} />
+        ) : (
+          <>
+            <CozyStoreScene sections={grocerySections} />
+            <div className="mt-6 grid gap-5 lg:grid-cols-2">
+              <GrocerySection title="Today's Fresh Order" items={grocerySections.todayFresh} sectionKey="todayFresh" accent="bg-honey" />
+              {Object.entries(grocerySections.sameDayByDate).map(([date, items]) => <GrocerySection key={date} title={`Same-Day Fresh: ${date}`} items={items} sectionKey={`sameDayByDate:${date}`} accent="bg-coral" />)}
+              <GrocerySection title="Weekly Fresh Grocery" items={grocerySections.weeklyFresh} sectionKey="weeklyFresh" accent="bg-sage" />
+              <GrocerySection title="Monthly Staples" items={grocerySections.monthlyStaples} sectionKey="monthlyStaples" accent="bg-cocoa" />
+              <GrocerySection title="Quarterly Bulk" items={grocerySections.quarterlyBulk} sectionKey="quarterlyBulk" accent="bg-lavender" />
+              <GrocerySection title="Check Pantry" items={grocerySections.checkPantry} sectionKey="checkPantry" accent="bg-honey" />
+              <GrocerySection title="Optional Items" items={grocerySections.optional} sectionKey="optional" />
+              <GrocerySection title="Ignored Items" items={grocerySections.ignored} sectionKey="ignored" />
+            </div>
+          </>
+        )}
       </main>
     </>
   );

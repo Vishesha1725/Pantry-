@@ -85,3 +85,5 @@ export type GrocerySections = {
   optional: GroceryItem[];
   ignored: GroceryItem[];
 };
+
+export type GrocerySectionKey = Exclude<keyof GrocerySections, "sameDayByDate"> | `sameDayByDate:${string}`;
