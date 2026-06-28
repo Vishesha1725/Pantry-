@@ -4,10 +4,11 @@ export type BuyingMode =
   | "weekly_fresh"
   | "monthly_staple"
   | "quarterly_bulk"
+  | "pantry_check"
   | "recipe_based"
   | "one_time";
 
-export type MealType = "dinner" | "lunch" | "snack" | "soup" | "salad" | "bowl";
+export type MealType = "breakfast" | "dinner" | "lunch" | "snack" | "soup" | "salad" | "bowl";
 export type Cuisine = "Indian" | "Asian" | "Mexican" | "Continental" | "Fusion";
 export type StorageType = "fridge" | "freezer" | "pantry" | "utility";
 export type StockStatus = "in_stock" | "low_stock" | "out_of_stock";
@@ -20,6 +21,10 @@ export type Ingredient = {
   unit: string;
   category: string;
   buyingMode: BuyingMode;
+  usedInRecipeId?: string;
+  usedInRecipeName?: string;
+  defaultStatus?: GroceryStatus;
+  notes?: string;
   optional?: boolean;
   freshnessRule?: string;
 };
@@ -34,6 +39,9 @@ export type Recipe = {
   difficulty: "easy" | "medium";
   freshnessRequirement: "low" | "medium" | "high";
   mainProtein: string;
+  proteinSource?: string;
+  shortDescription?: string;
+  freshnessNotes?: string;
   tags: string[];
   ingredients: Ingredient[];
   instructions: string[];
@@ -73,6 +81,41 @@ export type GroceryItem = Ingredient & {
   suggestedAction: string;
   status: "need" | "have" | "low" | "stale" | "optional" | "ignored";
   cookingDates?: string[];
+};
+
+export type GroceryStatus =
+  | "need_to_order"
+  | "have_at_home"
+  | "order_fresh_on_day"
+  | "check_pantry"
+  | "monthly_staple"
+  | "skip";
+
+export type RecipeWiseGroceryItem = Ingredient & {
+  usedInRecipeId: string;
+  usedInRecipeName: string;
+  status: GroceryStatus;
+  mealDay: string;
+};
+
+export type RecipeWiseGroceryGroup = {
+  recipeId: string;
+  recipeName: string;
+  mealDay: string;
+  ingredients: RecipeWiseGroceryItem[];
+};
+
+export type CombinedGroceryItem = {
+  id: string;
+  ingredientName: string;
+  totalQuantity: number;
+  unit: string;
+  category: string;
+  buyingMode: BuyingMode;
+  usedInRecipes: string[];
+  status: GroceryStatus;
+  mealDay?: string;
+  notes?: string;
 };
 
 export type GrocerySections = {

@@ -1,15 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Sparkles } from "lucide-react";
 import { RecipeCard } from "./recipe-card";
 import type { Recipe } from "@/types";
 import { usePantryQuest } from "@/lib/app-state";
 import { SelectedRecipeBasket } from "./selected-recipe-basket";
+import { Button } from "@/components/ui/button";
+import { CozyLoading } from "@/components/cozy-loading";
 
 export function WeeklyRecipePicker({ recipes }: { recipes: Recipe[] }) {
-  const { selectedRecipeIds, selectRecipe, unselectRecipe, createWeeklyPlan, addRecipesToPlan } = usePantryQuest();
+  const { selectedRecipeIds, selectRecipe, unselectRecipe, addRecipesToPlan, generatedRecipes, recipeGenerationLoading, recipeGenerationError, generateWeeklyRecipes } = usePantryQuest();
   const [message, setMessage] = useState("");
-  const weekly = useMemo(() => recipes.slice(0, 20), [recipes]);
+  const weekly = useMemo(() => (generatedRecipes.length ? generatedRecipes : recipes.slice(0, 20)), [generatedRecipes, recipes]);
   return (
     <div className="space-y-5">
       <div className="cozy-panel flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4">
@@ -17,11 +20,16 @@ export function WeeklyRecipePicker({ recipes }: { recipes: Recipe[] }) {
           <h2 className="text-xl font-black text-cocoa">Weekly recipe quest</h2>
           <p className="text-sm text-muted-foreground">Pick up to 7 vegetarian recipes. Seed ideas are available, but your plan starts clean.</p>
         </div>
-        <span className="rounded-full bg-white/80 px-4 py-2 text-sm font-bold text-cocoa">{selectedRecipeIds.length}/7 selected</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button onClick={generateWeeklyRecipes} disabled={recipeGenerationLoading}><Sparkles className="h-4 w-4" />Generate Recipes</Button>
+          <span className="rounded-full bg-white/80 px-4 py-2 text-sm font-bold text-cocoa">{selectedRecipeIds.length}/7 selected</span>
+        </div>
       </div>
       {message && <div className="rounded-2xl border border-coral/30 bg-coral/10 p-3 text-sm font-bold text-cocoa">{message}</div>}
+      {recipeGenerationError && <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-sm font-bold text-cocoa">{recipeGenerationError}</div>}
+      {recipeGenerationLoading && <CozyLoading />}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {weekly.map((recipe) => (
+        {!recipeGenerationLoading && weekly.map((recipe) => (
           <RecipeCard
             key={recipe.id}
             recipe={recipe}

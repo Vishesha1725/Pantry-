@@ -7,6 +7,7 @@ const labels: Record<BuyingMode, string> = {
   weekly_fresh: "Weekly fresh",
   monthly_staple: "Monthly staple",
   quarterly_bulk: "Quarterly bulk",
+  pantry_check: "Check pantry",
   recipe_based: "Recipe based",
   one_time: "One time"
 };

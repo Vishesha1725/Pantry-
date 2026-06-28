@@ -1,8 +1,15 @@
-import type { GroceryItem, GrocerySections, Ingredient, PantryItem, PlannedRecipe } from "@/types";
+import type { BuyingMode, CombinedGroceryItem, GroceryItem, GrocerySections, GroceryStatus, Ingredient, PantryItem, PlannedRecipe, RecipeWiseGroceryGroup, RecipeWiseGroceryItem } from "@/types";
 import { decideBuyingMode, isFreshEnough, isLowStock, suggestedActionFor } from "./freshness-engine";
 import { weeklyEssentials as defaultWeeklyEssentials } from "./seed-recipes";
 
 const keyFor = (ingredient: Ingredient) => ingredient.name.trim().toLowerCase();
+
+function defaultStatusFor(mode: BuyingMode): GroceryStatus {
+  if (mode === "same_day_fresh") return "order_fresh_on_day";
+  if (mode === "monthly_staple" || mode === "pantry_check") return "check_pantry";
+  if (mode === "one_time") return "have_at_home";
+  return "need_to_order";
+}
 
 function mergeIngredient(map: Map<string, GroceryItem>, ingredient: Ingredient, recipeName: string, day?: string) {
   const key = keyFor(ingredient);
@@ -67,4 +74,70 @@ export function generateGroceryList(plan: PlannedRecipe[], pantry: PantryItem[],
   }
 
   return sections;
+}
+
+export function generateStructuredGroceryList(plan: PlannedRecipe[], essentials: Ingredient[] | false = defaultWeeklyEssentials) {
+  const recipeWiseGroceryList: RecipeWiseGroceryGroup[] = plan.map((planned) => ({
+    recipeId: planned.recipe.id,
+    recipeName: planned.recipe.name,
+    mealDay: planned.day,
+    ingredients: planned.recipe.ingredients.map((ingredient): RecipeWiseGroceryItem => {
+      const buyingMode = decideBuyingMode(ingredient);
+      return {
+        ...ingredient,
+        buyingMode,
+        usedInRecipeId: planned.recipe.id,
+        usedInRecipeName: planned.recipe.name,
+        mealDay: planned.day,
+        status: ingredient.defaultStatus ?? defaultStatusFor(buyingMode),
+        notes: ingredient.notes ?? ingredient.freshnessRule
+      };
+    })
+  }));
+
+  if (essentials) {
+    recipeWiseGroceryList.push({
+      recipeId: "weekly-essentials",
+      recipeName: "Weekly Essentials",
+      mealDay: "Weekly",
+      ingredients: essentials.map((ingredient): RecipeWiseGroceryItem => {
+        const buyingMode = decideBuyingMode(ingredient);
+        return {
+          ...ingredient,
+          buyingMode,
+          usedInRecipeId: "weekly-essentials",
+          usedInRecipeName: "Weekly Essentials",
+          mealDay: "Weekly",
+          status: ingredient.defaultStatus ?? defaultStatusFor(buyingMode),
+          notes: ingredient.notes ?? ingredient.freshnessRule
+        };
+      })
+    });
+  }
+
+  const combinedMap = new Map<string, CombinedGroceryItem>();
+  recipeWiseGroceryList.flatMap((group) => group.ingredients).forEach((item) => {
+    const keepSeparate = item.buyingMode === "same_day_fresh";
+    const key = keepSeparate ? `${item.name.toLowerCase()}-${item.mealDay}-${item.usedInRecipeId}` : `${item.name.toLowerCase()}-${item.unit}`;
+    const existing = combinedMap.get(key);
+    if (existing && existing.unit === item.unit) {
+      existing.totalQuantity += item.quantity;
+      existing.usedInRecipes = Array.from(new Set([...existing.usedInRecipes, item.usedInRecipeName]));
+      return;
+    }
+    combinedMap.set(key, {
+      id: key.replace(/[^a-z0-9]+/gi, "-"),
+      ingredientName: keepSeparate ? `${item.mealDay} ${item.name}` : item.name,
+      totalQuantity: item.quantity,
+      unit: item.unit,
+      category: item.category,
+      buyingMode: item.buyingMode,
+      usedInRecipes: [item.usedInRecipeName],
+      status: item.status,
+      mealDay: keepSeparate ? item.mealDay : undefined,
+      notes: item.notes
+    });
+  });
+
+  return { recipeWiseGroceryList, combinedGroceryList: Array.from(combinedMap.values()) };
 }

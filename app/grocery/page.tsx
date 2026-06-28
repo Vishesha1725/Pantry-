@@ -5,6 +5,7 @@ import { WandSparkles } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { GroceryDragBoard } from "@/components/grocery/grocery-drag-board";
 import { GrocerySection } from "@/components/grocery/grocery-section";
+import { StructuredGrocery } from "@/components/grocery/structured-grocery";
 import { Nav } from "@/components/nav";
 import { CozyStoreScene } from "@/components/store/cozy-store-scene";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,7 @@ export default function GroceryPage() {
         ) : (
           <>
             <CozyStoreScene sections={grocerySections} />
+            <div className="mt-6"><StructuredGrocery /></div>
             <section className="mt-6 cozy-panel rounded-2xl p-5">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>

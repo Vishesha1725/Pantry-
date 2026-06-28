@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { GroceryItem, GrocerySectionKey, GrocerySections, Ingredient, PantryItem, PlannedRecipe, Recipe } from "@/types";
-import { generateGroceryList } from "./grocery-generator";
+import type { CombinedGroceryItem, GroceryItem, GrocerySectionKey, GrocerySections, GroceryStatus, Ingredient, PantryItem, PlannedRecipe, Recipe, RecipeWiseGroceryGroup } from "@/types";
+import { generateGroceryList, generateStructuredGroceryList } from "./grocery-generator";
 import { samplePantry, seedRecipes, selectedRecipeIds, weeklyEssentials as defaultWeeklyEssentials } from "./seed-recipes";
 
 export const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -10,9 +10,14 @@ export const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Sa
 type AppState = {
   pantryItems: PantryItem[];
   recipeLibrary: Recipe[];
+  generatedRecipes: Recipe[];
+  recipeGenerationLoading: boolean;
+  recipeGenerationError?: string;
   selectedRecipeIds: string[];
   weeklyPlan: PlannedRecipe[];
   grocerySections: GrocerySections;
+  recipeWiseGroceryList: RecipeWiseGroceryGroup[];
+  combinedGroceryList: CombinedGroceryItem[];
   weeklyEssentials: Ingredient[];
 };
 
@@ -24,6 +29,7 @@ type Toast = {
 type AppContextValue = AppState & {
   hydrated: boolean;
   selectedRecipes: Recipe[];
+  generateWeeklyRecipes: () => Promise<void>;
   selectRecipe: (id: string) => { ok: boolean; message?: string };
   unselectRecipe: (id: string) => void;
   createWeeklyPlan: () => void;
@@ -33,6 +39,11 @@ type AppContextValue = AppState & {
   addRecipesToPlan: (recipes: Recipe[]) => void;
   addRecipesToPlanAndGenerate: (recipes: Recipe[]) => void;
   generateGroceries: () => void;
+  updateRecipeWiseGroceryItem: (recipeId: string, ingredientId: string, updates: Partial<RecipeWiseGroceryGroup["ingredients"][number]>) => void;
+  updateCombinedGroceryItem: (id: string, updates: Partial<CombinedGroceryItem>) => void;
+  deleteRecipeWiseGroceryItem: (recipeId: string, ingredientId: string) => void;
+  deleteCombinedGroceryItem: (id: string) => void;
+  addManualGroceryItem: (item?: Partial<CombinedGroceryItem>) => void;
   updateGroceryItem: (section: GrocerySectionKey, itemName: string, updates: Partial<GroceryItem>) => void;
   deleteGroceryItem: (section: GrocerySectionKey, itemName: string) => void;
   clearGroceryList: () => void;
@@ -62,9 +73,14 @@ type FlatGrocerySectionKey = Exclude<keyof GrocerySections, "sameDayByDate">;
 const initialState: AppState = {
   pantryItems: [],
   recipeLibrary: seedRecipes,
+  generatedRecipes: [],
+  recipeGenerationLoading: false,
+  recipeGenerationError: undefined,
   selectedRecipeIds: [],
   weeklyPlan: [],
   grocerySections: emptyGrocerySections(),
+  recipeWiseGroceryList: [],
+  combinedGroceryList: [],
   weeklyEssentials: defaultWeeklyEssentials
 };
 
@@ -83,9 +99,14 @@ function normalizeState(state: Partial<AppState>): AppState {
   return {
     pantryItems: state.pantryItems ?? [],
     recipeLibrary: seedRecipes,
+    generatedRecipes: state.generatedRecipes ?? [],
+    recipeGenerationLoading: false,
+    recipeGenerationError: undefined,
     selectedRecipeIds: state.selectedRecipeIds ?? [],
     weeklyPlan: state.weeklyPlan ?? [],
     grocerySections: state.grocerySections ?? emptyGrocerySections(),
+    recipeWiseGroceryList: state.recipeWiseGroceryList ?? [],
+    combinedGroceryList: state.combinedGroceryList ?? [],
     weeklyEssentials: state.weeklyEssentials ?? defaultWeeklyEssentials
   };
 }
@@ -154,6 +175,19 @@ function buildPlanWithRecipes(current: AppState, recipes: Recipe[]) {
   return { nextLibrary, nextSelected, nextPlan };
 }
 
+function structuredFrom(plan: PlannedRecipe[], essentials: Ingredient[]) {
+  return generateStructuredGroceryList(plan, essentials);
+}
+
+function normalizeGroceryStatus(status: GroceryStatus) {
+  if (status === "skip") return "Skipped";
+  if (status === "have_at_home") return "Already available";
+  if (status === "order_fresh_on_day") return "Order fresh on recipe day";
+  if (status === "monthly_staple") return "Moved to monthly staples";
+  if (status === "check_pantry") return "Check pantry";
+  return "Need to order";
+}
+
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>(initialState);
   const [hydrated, setHydrated] = useState(false);
@@ -188,6 +222,30 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     hydrated,
     selectedRecipes,
     notify,
+    generateWeeklyRecipes: async () => {
+      setState((current) => ({ ...current, recipeGenerationLoading: true, recipeGenerationError: undefined }));
+      try {
+        const currentOffset = Date.now() % 1000;
+        const response = await fetch("/api/generate-recipes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ offset: currentOffset })
+        });
+        if (!response.ok) throw new Error("Recipe generation failed");
+        const data = await response.json() as { recipes: Recipe[]; message?: string };
+        setState((current) => ({
+          ...current,
+          recipeGenerationLoading: false,
+          generatedRecipes: data.recipes,
+          recipeLibrary: [...data.recipes, ...seedRecipes.filter((seed) => !data.recipes.some((recipe) => recipe.id === seed.id))]
+        }));
+        notify(data.message ?? "Recipes generated");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Recipe generation failed";
+        setState((current) => ({ ...current, recipeGenerationLoading: false, recipeGenerationError: message }));
+        notify(message);
+      }
+    },
     selectRecipe: (id) => {
       let result: { ok: boolean; message?: string } = { ok: true };
       setState((current) => {
@@ -251,18 +309,71 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }),
     addRecipesToPlanAndGenerate: (recipes) => setState((current) => {
       const { nextLibrary, nextSelected, nextPlan } = buildPlanWithRecipes(current, recipes);
+      const structured = structuredFrom(nextPlan, current.weeklyEssentials);
       notify("Recipe added and grocery list generated");
       return {
         ...current,
         recipeLibrary: nextLibrary,
         selectedRecipeIds: nextSelected,
         weeklyPlan: nextPlan,
-        grocerySections: generateGroceryList(nextPlan, current.pantryItems, current.weeklyEssentials)
+        grocerySections: generateGroceryList(nextPlan, current.pantryItems, current.weeklyEssentials),
+        ...structured
       };
     }),
     generateGroceries: () => setState((current) => {
+      const structured = structuredFrom(current.weeklyPlan, current.weeklyEssentials);
       notify("Grocery list generated");
-      return { ...current, grocerySections: generateGroceryList(current.weeklyPlan, current.pantryItems, current.weeklyEssentials) };
+      return {
+        ...current,
+        grocerySections: generateGroceryList(current.weeklyPlan, current.pantryItems, current.weeklyEssentials),
+        ...structured
+      };
+    }),
+    updateRecipeWiseGroceryItem: (recipeId, ingredientId, updates) => setState((current) => {
+      notify(updates.status ? normalizeGroceryStatus(updates.status) : "Ingredient updated");
+      return {
+        ...current,
+        recipeWiseGroceryList: current.recipeWiseGroceryList.map((group) => group.recipeId === recipeId
+          ? { ...group, ingredients: group.ingredients.map((item) => item.id === ingredientId ? { ...item, ...updates } : item) }
+          : group)
+      };
+    }),
+    updateCombinedGroceryItem: (id, updates) => setState((current) => {
+      notify(updates.status ? normalizeGroceryStatus(updates.status) : "Grocery item updated");
+      return {
+        ...current,
+        combinedGroceryList: current.combinedGroceryList.map((item) => item.id === id ? { ...item, ...updates } : item)
+      };
+    }),
+    deleteRecipeWiseGroceryItem: (recipeId, ingredientId) => setState((current) => {
+      notify("Ingredient removed");
+      return {
+        ...current,
+        recipeWiseGroceryList: current.recipeWiseGroceryList.map((group) => group.recipeId === recipeId
+          ? { ...group, ingredients: group.ingredients.filter((item) => item.id !== ingredientId) }
+          : group)
+      };
+    }),
+    deleteCombinedGroceryItem: (id) => setState((current) => {
+      notify("Grocery item removed");
+      return { ...current, combinedGroceryList: current.combinedGroceryList.filter((item) => item.id !== id) };
+    }),
+    addManualGroceryItem: (item) => setState((current) => {
+      notify("Manual grocery item added");
+      return {
+        ...current,
+        combinedGroceryList: [{
+          id: crypto.randomUUID(),
+          ingredientName: item?.ingredientName ?? "manual item",
+          totalQuantity: item?.totalQuantity ?? 1,
+          unit: item?.unit ?? "pc",
+          category: item?.category ?? "manual",
+          buyingMode: item?.buyingMode ?? "weekly_fresh",
+          usedInRecipes: item?.usedInRecipes ?? ["Manual"],
+          status: item?.status ?? "need_to_order",
+          notes: item?.notes
+        }, ...current.combinedGroceryList]
+      };
     }),
     updateGroceryItem: (section, itemName, updates) => setState((current) => {
       const next = structuredClone(current.grocerySections);
@@ -296,7 +407,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }),
     clearGroceryList: () => setState((current) => {
       notify("Grocery list cleared");
-      return { ...current, grocerySections: emptyGrocerySections() };
+      return { ...current, grocerySections: emptyGrocerySections(), recipeWiseGroceryList: [], combinedGroceryList: [] };
     }),
     updateWeeklyEssential: (name, updates) => setState((current) => {
       notify("Weekly essential updated");
@@ -323,9 +434,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       setState({
         pantryItems: samplePantry,
         recipeLibrary: seedRecipes,
+        generatedRecipes: [],
+        recipeGenerationLoading: false,
+        recipeGenerationError: undefined,
         selectedRecipeIds,
         weeklyPlan: plan,
         grocerySections: generateGroceryList(plan, samplePantry, defaultWeeklyEssentials),
+        ...structuredFrom(plan, defaultWeeklyEssentials),
         weeklyEssentials: defaultWeeklyEssentials
       });
       notify("Demo data loaded");
