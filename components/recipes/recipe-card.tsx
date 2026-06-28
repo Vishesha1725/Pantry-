@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { CalendarPlus, Clock, Eye, Plus, X } from "lucide-react";
@@ -31,7 +33,7 @@ export function RecipeCard({ recipe, selected = false, onSelect, onAddToPlan }: 
         </div>
         <div className="mt-auto grid gap-2 sm:grid-cols-3">
           <Button type="button" variant={selected ? "coral" : "default"} className="sm:col-span-1" onClick={onSelect}>
-            {selected ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}{selected ? "Unselect" : "Select"}
+            {selected ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}{selected ? "Selected" : "Select"}
           </Button>
           <Button type="button" variant="secondary" onClick={onAddToPlan}><CalendarPlus className="h-4 w-4" />Plan</Button>
           <Button asChild variant="outline"><Link href={`/recipes/${recipe.id}`}><Eye className="h-4 w-4" />Details</Link></Button>

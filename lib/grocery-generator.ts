@@ -1,6 +1,6 @@
 import type { GroceryItem, GrocerySections, Ingredient, PantryItem, PlannedRecipe } from "@/types";
 import { decideBuyingMode, isFreshEnough, isLowStock, suggestedActionFor } from "./freshness-engine";
-import { weeklyEssentials } from "./seed-recipes";
+import { weeklyEssentials as defaultWeeklyEssentials } from "./seed-recipes";
 
 const keyFor = (ingredient: Ingredient) => ingredient.name.trim().toLowerCase();
 
@@ -24,13 +24,13 @@ function mergeIngredient(map: Map<string, GroceryItem>, ingredient: Ingredient, 
   });
 }
 
-export function generateGroceryList(plan: PlannedRecipe[], pantry: PantryItem[], includeEssentials = true): GrocerySections {
+export function generateGroceryList(plan: PlannedRecipe[], pantry: PantryItem[], essentials: Ingredient[] | false = defaultWeeklyEssentials): GrocerySections {
   const map = new Map<string, GroceryItem>();
   plan.forEach((planned) => {
     planned.recipe.ingredients.forEach((ingredient) => mergeIngredient(map, ingredient, planned.recipe.name, planned.day));
   });
-  if (includeEssentials) {
-    weeklyEssentials.forEach((ingredient) => mergeIngredient(map, ingredient, "Weekly essentials"));
+  if (essentials) {
+    essentials.forEach((ingredient) => mergeIngredient(map, ingredient, "Weekly essentials"));
   }
 
   const pantryByName = new Map(pantry.map((item) => [item.name.toLowerCase(), item]));

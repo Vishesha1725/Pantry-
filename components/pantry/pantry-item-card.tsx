@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { CheckCircle2, PackageCheck, PackageX, Trash2 } from "lucide-react";
 import { daysOfStockRemaining, daysUntil, isExpiringSoon, isLowStock } from "@/lib/freshness-engine";
 import { FreshnessBadge } from "@/components/freshness-badge";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,9 @@ export function PantryItemCard({ item, editable = false }: { item: PantryItem; e
       </div>
       {editable && (
         <div className="mt-4 flex flex-wrap gap-2">
+          <Button size="sm" variant="secondary" onClick={() => updatePantryItem(item.id, { stockStatus: "out_of_stock", quantity: 0 })}><PackageX className="h-3.5 w-3.5" />Finished</Button>
+          <Button size="sm" variant="outline" onClick={() => updatePantryItem(item.id, { stockStatus: "in_stock" })}><CheckCircle2 className="h-3.5 w-3.5" />Enough left</Button>
+          <Button size="sm" variant="outline" onClick={() => updatePantryItem(item.id, { stockStatus: "low_stock" })}><PackageCheck className="h-3.5 w-3.5" />Low stock</Button>
           <EditItemModal
             title={`Edit ${item.name}`}
             fields={["name", "category", "quantity", "unit", "expiryDate", "notes"]}

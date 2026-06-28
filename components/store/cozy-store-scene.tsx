@@ -1,3 +1,5 @@
+"use client";
+
 import type { GrocerySections } from "@/types";
 import { CartPanel } from "./cart-panel";
 import { StoreShelf } from "./store-shelf";

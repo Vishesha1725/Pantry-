@@ -1,6 +1,5 @@
 import { SettingsPanel } from "@/components/settings-panel";
 import { Nav } from "@/components/nav";
-import { weeklyEssentials } from "@/lib/seed-recipes";
 
 export default function EssentialsPage() {
   return (
@@ -10,9 +9,7 @@ export default function EssentialsPage() {
         <SettingsPanel />
         <section className="cozy-panel rounded-2xl p-5">
           <h1 className="text-3xl font-black text-cocoa">Default weekly essentials</h1>
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
-            {weeklyEssentials.map((item) => <div key={item.name} className="rounded-xl bg-white/65 p-3 font-semibold text-cocoa">{item.name}: {item.quantity} {item.unit}</div>)}
-          </div>
+          <p className="mt-3 text-muted-foreground">These are included when groceries are generated. Oat milk defaults to 1 litre per week, and matcha is treated as already available unless you remove or edit it.</p>
         </section>
       </main>
     </>

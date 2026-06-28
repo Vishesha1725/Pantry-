@@ -1,13 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { CalendarCheck, X } from "lucide-react";
 import { usePantryQuest } from "@/lib/app-state";
 import { Button } from "@/components/ui/button";
 
 export function SelectedRecipeBasket() {
   const { selectedRecipes, unselectRecipe, createWeeklyPlan } = usePantryQuest();
+  const router = useRouter();
   return (
     <motion.div layout initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="sticky bottom-4 z-20 rounded-2xl border bg-cocoa/95 p-4 text-cream shadow-cozy">
       <div className="flex flex-wrap items-center gap-3">
@@ -25,9 +26,15 @@ export function SelectedRecipeBasket() {
             ))}
           </AnimatePresence>
         </div>
-        <Button variant="coral" onClick={createWeeklyPlan} disabled={!selectedRecipes.length}>
-          <CalendarCheck className="h-4 w-4" />
-          <Link href="/meal-plan">Create Weekly Plan</Link>
+        <Button
+          variant="coral"
+          disabled={!selectedRecipes.length}
+          onClick={() => {
+            createWeeklyPlan();
+            router.push("/plan");
+          }}
+        >
+          <CalendarCheck className="h-4 w-4" />Create Weekly Plan
         </Button>
       </div>
     </motion.div>

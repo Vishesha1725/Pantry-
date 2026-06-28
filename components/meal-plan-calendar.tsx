@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { CalendarDays, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 import { days, usePantryQuest } from "@/lib/app-state";
 import { EmptyState } from "./empty-state";
@@ -10,12 +11,22 @@ import { Button } from "./ui/button";
 
 export function MealPlanCalendar() {
   const { weeklyPlan, movePlannedRecipe, removePlannedRecipe, clearWeeklyPlan, generateGroceries } = usePantryQuest();
+  const router = useRouter();
   const complete = new Set(weeklyPlan.map((item) => item.day)).size >= 7;
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap gap-2">
         <Button asChild variant="secondary"><Link href="/recipes"><Plus className="h-4 w-4" />Add another recipe</Link></Button>
-        <Button variant="coral" onClick={generateGroceries} disabled={!weeklyPlan.length}><ShoppingBasket className="h-4 w-4" /><Link href="/grocery">Generate Grocery List</Link></Button>
+        <Button
+          variant="coral"
+          disabled={!weeklyPlan.length}
+          onClick={() => {
+            generateGroceries();
+            router.push("/grocery");
+          }}
+        >
+          <ShoppingBasket className="h-4 w-4" />Generate Grocery List
+        </Button>
         <Button variant="outline" onClick={clearWeeklyPlan} disabled={!weeklyPlan.length}>Clear Weekly Plan</Button>
       </div>
       <AnimatePresence>

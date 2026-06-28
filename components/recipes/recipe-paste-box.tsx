@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ListPlus, ShoppingBasket, Sparkles } from "lucide-react";
 import { parseRecipesFromText } from "@/lib/recipe-parser";
 import { usePantryQuest } from "@/lib/app-state";
@@ -14,7 +14,8 @@ const sample = "";
 export function RecipePasteBox() {
   const [text, setText] = useState(sample);
   const [parsed, setParsed] = useState<PlannedRecipe[]>([]);
-  const { addRecipesToPlan, generateGroceries } = usePantryQuest();
+  const { addRecipesToPlan, addRecipesToPlanAndGenerate } = usePantryQuest();
+  const router = useRouter();
   const preview = useMemo(() => text.trim() ? parseRecipesFromText(text) : [], [text]);
 
   const updateIngredient = (recipeId: string, name: string, updates: Partial<Ingredient>) => {
@@ -44,7 +45,16 @@ export function RecipePasteBox() {
           <Button onClick={() => setParsed(preview)} disabled={!preview.length}><Sparkles className="h-4 w-4" />Extract Recipes</Button>
           <Button variant="secondary" onClick={() => setParsed(preview)} disabled={!preview.length}>Extract Ingredients</Button>
           <Button variant="outline" onClick={saveToPlan} disabled={!parsed.length}><ListPlus className="h-4 w-4" />Add to Weekly Plan</Button>
-          <Button variant="coral" onClick={() => { saveToPlan(); window.setTimeout(generateGroceries, 0); }} disabled={!parsed.length}><ShoppingBasket className="h-4 w-4" /><Link href="/grocery">Generate Grocery List</Link></Button>
+          <Button
+            variant="coral"
+            onClick={() => {
+              addRecipesToPlanAndGenerate(parsed.map((item) => item.recipe));
+              router.push("/grocery");
+            }}
+            disabled={!parsed.length}
+          >
+            <ShoppingBasket className="h-4 w-4" />Generate Grocery List
+          </Button>
         </div>
       </div>
       <div className="space-y-4">

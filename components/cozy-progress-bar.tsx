@@ -1,3 +1,5 @@
+"use client";
+
 import { motion } from "framer-motion";
 
 export function CozyProgressBar({ value, label }: { value: number; label?: string }) {

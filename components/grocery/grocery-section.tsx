@@ -1,3 +1,5 @@
+"use client";
+
 import type { GroceryItem, GrocerySectionKey } from "@/types";
 import { EmptyState } from "../empty-state";
 import { GroceryItemCard } from "./grocery-item-card";

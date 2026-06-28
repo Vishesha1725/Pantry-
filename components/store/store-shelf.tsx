@@ -1,3 +1,5 @@
+"use client";
+
 import type { GroceryItem, GrocerySectionKey } from "@/types";
 import { motion } from "framer-motion";
 import { ProductItem } from "./product-item";

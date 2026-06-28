@@ -28,6 +28,7 @@ export default function GroceryPage() {
     ...grocerySections.checkPantry.map((item) => ({ ...item, sectionKey: "checkPantry" as const })),
     ...grocerySections.optional.map((item) => ({ ...item, sectionKey: "optional" as const }))
   ];
+  const finalOrderItems = dragItems.filter((item) => item.status !== "have" && item.status !== "ignored");
 
   return (
     <>
@@ -48,6 +49,22 @@ export default function GroceryPage() {
         ) : (
           <>
             <CozyStoreScene sections={grocerySections} />
+            <section className="mt-6 cozy-panel rounded-2xl p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-black text-cocoa">Final Order List</h2>
+                  <p className="text-sm text-muted-foreground">Only items still needed remain here.</p>
+                </div>
+                <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-bold text-cocoa">{finalOrderItems.length}</span>
+              </div>
+              <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                {finalOrderItems.length ? finalOrderItems.map((item) => (
+                  <div key={`final-${item.sectionKey}-${item.name}`} className="rounded-xl bg-white/70 p-3 text-sm font-semibold capitalize text-cocoa">
+                    {item.name} <span className="text-muted-foreground">· {item.quantity} {item.unit}</span>
+                  </div>
+                )) : <p className="rounded-xl bg-white/60 p-4 text-sm text-muted-foreground">Nothing left to order.</p>}
+              </div>
+            </section>
             <div className="mt-6"><GroceryDragBoard items={dragItems} /></div>
             <div className="mt-6 grid gap-5 lg:grid-cols-2">
               <GrocerySection title="Today's Fresh Order" items={grocerySections.todayFresh} sectionKey="todayFresh" accent="bg-honey" />

@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const items = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/recipes", label: "Recipes", icon: ShoppingBasket },
-  { href: "/meal-plan", label: "Plan", icon: CalendarDays },
+  { href: "/plan", label: "Plan", icon: CalendarDays },
   { href: "/inbox", label: "Inbox", icon: ClipboardList },
   { href: "/grocery", label: "Grocery", icon: Store },
   { href: "/pantry", label: "Pantry", icon: PackageCheck }
@@ -25,7 +25,7 @@ export function Nav() {
         </Link>
         <div className="hidden gap-1 md:flex">
           {items.map((item) => {
-            const active = pathname === item.href;
+            const active = pathname === item.href || (item.href === "/plan" && pathname === "/meal-plan");
             return (
               <Link key={item.href} href={item.href} className={cn("flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-cocoa/80 hover:bg-white/70 hover:text-cocoa", active && "bg-white text-cocoa shadow-insetCozy")}>
                 <item.icon className="h-4 w-4" />
@@ -34,6 +34,17 @@ export function Nav() {
             );
           })}
         </div>
+      </div>
+      <div className="flex gap-1 overflow-x-auto px-4 pb-3 md:hidden">
+        {items.map((item) => {
+          const active = pathname === item.href || (item.href === "/plan" && pathname === "/meal-plan");
+          return (
+            <Link key={item.href} href={item.href} className={cn("flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-cocoa/80 hover:bg-white/70 hover:text-cocoa", active && "bg-white text-cocoa shadow-insetCozy")}>
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );

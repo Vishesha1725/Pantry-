@@ -1,10 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ShoppingBasket } from "lucide-react";
 import { FreshnessBadge } from "@/components/freshness-badge";
 import { Nav } from "@/components/nav";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { RecipeDetailActions } from "@/components/recipes/recipe-detail-actions";
 import { seedRecipes } from "@/lib/seed-recipes";
 
 export default async function RecipeDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -23,7 +21,7 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
               <h1 className="text-4xl font-black text-cocoa">{recipe.name}</h1>
               <p className="mt-2 text-muted-foreground">{recipe.cuisine} · {recipe.mealType} · {recipe.prepTime} min · {recipe.mainProtein}</p>
             </div>
-            <Button asChild><Link href="/meal-plan">Add to this week</Link></Button>
+            <RecipeDetailActions recipe={recipe} />
           </div>
           <div className="mt-5 flex flex-wrap gap-2">{recipe.tags.map((tag) => <Badge key={tag}>{tag}</Badge>)}</div>
         </div>
@@ -43,7 +41,7 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
           <section className="cozy-panel rounded-2xl p-5">
             <h2 className="text-xl font-black text-cocoa">Grocery impact</h2>
             <p className="mt-2 text-sm text-muted-foreground">{fresh.length} fresh items and {pantry.length} pantry items will be checked before ordering.</p>
-            <Button asChild className="mt-4" variant="coral"><Link href="/grocery"><ShoppingBasket className="h-4 w-4" />Generate grocery list from this recipe</Link></Button>
+            <div className="mt-4"><RecipeDetailActions recipe={recipe} /></div>
           </section>
           <section className="cozy-panel rounded-2xl p-5">
             <h2 className="text-xl font-black text-cocoa">Fresh ingredients needed</h2>
